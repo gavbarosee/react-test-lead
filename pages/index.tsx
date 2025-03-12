@@ -1,3 +1,4 @@
+import { useState, FormEvent } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Container from "react-bootstrap/Container";
@@ -8,22 +9,53 @@ import Table from "react-bootstrap/Table";
 
 import { formatCurrency } from "../utils/formatCurrency";
 
+interface MortgageFormData {
+  propertyPrice: number;
+  deposit: number;
+  mortgageTerm: number;
+  interestRate: number;
+}
+
 export default function MortgageCalculator() {
+  const [formData, setFormData] = useState<MortgageFormData>({
+    propertyPrice: 100000,
+    deposit: 5000,
+    mortgageTerm: 15,
+    interestRate: 5.25,
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: parseFloat(value) || 0, // convert to number, default to 0 if NaN
+    });
+  };
+
+  // handle form submission just logging for now
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    console.log("formdata:", formData);
+    // TODO: implement actual calculations
+  };
+
   return (
     <Container>
       <title>Mortgage Calculator Test</title>
       <Row className="gap-x-10 pt-3">
         <Col className="border-r" md="auto">
-          <Form>
-            <Form.Label htmlFor="price">Property Price</Form.Label>
+          <Form onSubmit={handleSubmit}>
+            <Form.Label htmlFor="propertyPrice">Property Price</Form.Label>
             <InputGroup className="mb-3">
               <InputGroup.Text>£</InputGroup.Text>
               <Form.Control
-                id="price"
-                name="price"
+                id="propertyPrice"
+                name="propertyPrice"
                 type="number"
                 className="no-spinner"
                 step="any"
+                value={formData.propertyPrice}
+                onChange={handleInputChange}
               />
             </InputGroup>
             <Form.Label htmlFor="deposit">Deposit</Form.Label>
@@ -35,29 +67,33 @@ export default function MortgageCalculator() {
                 type="number"
                 className="no-spinner"
                 step="any"
+                value={formData.deposit}
+                onChange={handleInputChange}
               />
             </InputGroup>
 
-            <Form.Label htmlFor="term">Mortgage Term</Form.Label>
+            <Form.Label htmlFor="mortgageTerm">Mortgage Term</Form.Label>
             <InputGroup className="mb-3">
               <Form.Control
-                id="term"
-                name="term"
+                id="mortgageTerm"
+                name="mortgageTerm"
                 type="number"
                 step="any"
-                defaultValue={15}
+                value={formData.mortgageTerm}
+                onChange={handleInputChange}
               />
               <InputGroup.Text>years</InputGroup.Text>
             </InputGroup>
-            <Form.Label htmlFor="interest">Interest rate</Form.Label>
+            <Form.Label htmlFor="interestRate">Interest rate</Form.Label>
             <InputGroup className="mb-3">
               <Form.Control
-                id="interest"
-                name="interest"
+                id="interestRate"
+                name="interestRate"
                 type="number"
                 step="any"
                 className="no-spinner"
-                defaultValue={5.25}
+                value={formData.interestRate}
+                onChange={handleInputChange}
               />
               <InputGroup.Text>%</InputGroup.Text>
             </InputGroup>
