@@ -1,4 +1,5 @@
-import { useState, FormEvent } from "react";
+import { useState, useEffect } from "react";
+import { Alert, Spinner } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
@@ -18,6 +19,7 @@ import {
   calculateMonthlyPayment,
   YearlyBreakdownRecord,
 } from "@/utils/MortgageCalculator/mortgageCalculations";
+import { InterestRateData } from "@/services/bankOfEngland";
 
 interface MortgageFormData {
   propertyPrice: number;
@@ -35,17 +37,57 @@ interface MortgageResults {
 }
 
 export default function MortgageCalculator() {
+  // FORM STATE
   const [formData, setFormData] = useState<MortgageFormData>({
     propertyPrice: 100000,
     deposit: 5000,
     mortgageTerm: 15,
     interestRate: 5.25,
   });
+  const [validated, setValidated] = useState<boolean>(false);
+
+  // CALCULATIONS DISPLAY STATE
   const [results, setResults] = useState<MortgageResults | null>(null);
   const [yearlyBreakdown, setYearlyBreakdown] = useState<
     YearlyBreakdownRecord[]
   >([]);
-  const [validated, setValidated] = useState<boolean>(false);
+
+  // BANK OF ENGLAND RATE STATE
+  const [boeRate, setBoeRate] = useState<InterestRateData | null>(null);
+  const [isLoadingRate, setIsLoadingRate] = useState<boolean>(false);
+  const [useBoERate, setUseBoERate] = useState<boolean>(false);
+
+  // for fetching BoE interest rate
+  useEffect(() => {
+    const fetchInterestRate = async () => {
+      setIsLoadingRate(true);
+      try {
+        const response = await fetch("/api/interest-rate");
+        const data: InterestRateData = await response.json();
+        setBoeRate(data);
+      } catch (error) {
+        console.error("Failed to fetch interest rate:", error);
+      } finally {
+        setIsLoadingRate(false);
+      }
+    };
+
+    fetchInterestRate();
+  }, []);
+
+  // for applying BoE rate when the toggle is switched
+  useEffect(() => {
+    if (useBoERate && boeRate && !boeRate.isError) {
+      setFormData((prev) => ({
+        ...prev,
+        interestRate: boeRate.rate,
+      }));
+    }
+  }, [useBoERate, boeRate]);
+
+  const handleBoERateToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUseBoERate(e.target.checked);
+  };
 
   const validateForm = (): boolean => {
     if (formData.propertyPrice <= 0) return false; // property price must be greater than zero
@@ -196,21 +238,43 @@ export default function MortgageCalculator() {
                 id="interestRate"
                 name="interestRate"
                 type="number"
-                step="any"
+                step="0.01"
                 className="no-spinner"
                 value={formData.interestRate}
                 onChange={handleInputChange}
                 required
                 min={0}
+                disabled={useBoERate}
               />
+              <InputGroup.Text>%</InputGroup.Text>
               <Form.Control.Feedback
                 type="invalid"
                 data-testid="invalid-interest-rate"
               >
                 Interest rate cannot be negative
               </Form.Control.Feedback>
-              <InputGroup.Text>%</InputGroup.Text>
             </InputGroup>
+
+            {isLoadingRate ? (
+              <div className="mb-3 d-flex align-items-center">
+                <Spinner animation="border" size="sm" />
+                <span className="ms-2">Loading Bank of England rate...</span>
+              </div>
+            ) : boeRate && !boeRate.isError ? (
+              <Form.Check
+                type="switch"
+                id="useBoERate"
+                label={`Use Bank of England rate (${boeRate.rate}%)`}
+                checked={useBoERate}
+                onChange={handleBoERateToggle}
+                className="mb-3"
+              />
+            ) : boeRate && boeRate.isError ? (
+              <Alert variant="warning" className="mb-3">
+                Failed to load Bank of England rate: {boeRate.errorMessage}
+              </Alert>
+            ) : null}
+
             <Button className="w-full" variant="primary" type="submit">
               Calculate
             </Button>
