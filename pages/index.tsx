@@ -1,10 +1,10 @@
 import { useState, FormEvent } from "react";
 import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import Container from "react-bootstrap/Container";
+import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
+import Row from "react-bootstrap/Row";
 import Table from "react-bootstrap/Table";
 
 import { formatCurrency } from "@/utils/formatting/formatCurrency";
@@ -41,12 +41,20 @@ export default function MortgageCalculator() {
     mortgageTerm: 15,
     interestRate: 5.25,
   });
-
   const [results, setResults] = useState<MortgageResults | null>(null);
-
   const [yearlyBreakdown, setYearlyBreakdown] = useState<
     YearlyBreakdownRecord[]
   >([]);
+  const [validated, setValidated] = useState<boolean>(false);
+
+  const validateForm = (): boolean => {
+    if (formData.propertyPrice <= 0) return false; // property price must be greater than zero
+    if (formData.deposit < 0) return false; // deposit cannot be negative
+    if (formData.deposit >= formData.propertyPrice) return false; // deposit must be less than property price
+    if (formData.mortgageTerm <= 0) return false; // mortgage term must be greater than zero
+    if (formData.interestRate < 0) return false; // interest rate cannot be negative
+    return true;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -56,9 +64,21 @@ export default function MortgageCalculator() {
     });
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("formdata:", formData);
+
+    const form = e.currentTarget;
+    if (form.checkValidity() === false) {
+      e.stopPropagation();
+      setValidated(true);
+      return;
+    }
+
+    if (!validateForm()) {
+      setValidated(true);
+      return;
+    }
 
     const { propertyPrice, deposit, mortgageTerm, interestRate } = formData;
 
@@ -105,7 +125,7 @@ export default function MortgageCalculator() {
       <title>Mortgage Calculator Test</title>
       <Row className="gap-x-10 pt-3">
         <Col className="border-r" md="auto">
-          <Form onSubmit={handleSubmit}>
+          <Form noValidate validated={validated} onSubmit={handleSubmit}>
             <Form.Label htmlFor="propertyPrice">Property Price</Form.Label>
             <InputGroup className="mb-3">
               <InputGroup.Text>£</InputGroup.Text>
@@ -117,7 +137,15 @@ export default function MortgageCalculator() {
                 step="any"
                 value={formData.propertyPrice}
                 onChange={handleInputChange}
+                required
+                min={1}
               />
+              <Form.Control.Feedback
+                type="invalid"
+                data-testid="invalid-property-price"
+              >
+                Please provide a valid property price
+              </Form.Control.Feedback>
             </InputGroup>
             <Form.Label htmlFor="deposit">Deposit</Form.Label>
             <InputGroup className="mb-3">
@@ -130,7 +158,16 @@ export default function MortgageCalculator() {
                 step="any"
                 value={formData.deposit}
                 onChange={handleInputChange}
+                required
+                min={1}
+                max={formData.propertyPrice}
               />
+              <Form.Control.Feedback
+                type="invalid"
+                data-testid="invalid-deposit"
+              >
+                Deposit cannot be negative or must be less than property price
+              </Form.Control.Feedback>
             </InputGroup>
 
             <Form.Label htmlFor="mortgageTerm">Mortgage Term</Form.Label>
@@ -142,7 +179,15 @@ export default function MortgageCalculator() {
                 step="any"
                 value={formData.mortgageTerm}
                 onChange={handleInputChange}
+                required
+                min={1}
               />
+              <Form.Control.Feedback
+                type="invalid"
+                data-testid="invalid-mortgage-term"
+              >
+                Mortgage term mut be greater than 0
+              </Form.Control.Feedback>
               <InputGroup.Text>years</InputGroup.Text>
             </InputGroup>
             <Form.Label htmlFor="interestRate">Interest rate</Form.Label>
@@ -155,7 +200,15 @@ export default function MortgageCalculator() {
                 className="no-spinner"
                 value={formData.interestRate}
                 onChange={handleInputChange}
+                required
+                min={0}
               />
+              <Form.Control.Feedback
+                type="invalid"
+                data-testid="invalid-interest-rate"
+              >
+                Interest rate cannot be negative
+              </Form.Control.Feedback>
               <InputGroup.Text>%</InputGroup.Text>
             </InputGroup>
             <Button className="w-full" variant="primary" type="submit">
