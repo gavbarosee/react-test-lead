@@ -7,13 +7,28 @@ import Col from "react-bootstrap/Col";
 import InputGroup from "react-bootstrap/InputGroup";
 import Table from "react-bootstrap/Table";
 
-import { formatCurrency } from "../utils/formatCurrency";
+import { formatCurrency } from "@/utils/formatCurrency";
+import { calculateMonthlyPayment } from "@/utils/MortgageCalculator/calculateRepayment";
+import {
+  calculateCapital,
+  calculateTotalRepayment,
+  calculateTotalInterest,
+} from "@/utils/MortgageCalculator/mortgageUtils";
+import { EXTRA_INTEREST_RATE } from "@/utils/constants";
 
 interface MortgageFormData {
   propertyPrice: number;
   deposit: number;
   mortgageTerm: number;
   interestRate: number;
+}
+
+interface MortgageResults {
+  monthlyPayment: number;
+  totalRepayment: number;
+  capital: number;
+  interest: number;
+  affordabilityCheck: number;
 }
 
 export default function MortgageCalculator() {
@@ -24,6 +39,8 @@ export default function MortgageCalculator() {
     interestRate: 5.25,
   });
 
+  const [results, setResults] = useState<MortgageResults | null>(null);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -32,11 +49,36 @@ export default function MortgageCalculator() {
     });
   };
 
-  // handle form submission just logging for now
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     console.log("formdata:", formData);
-    // TODO: implement actual calculations
+
+    const { propertyPrice, deposit, mortgageTerm, interestRate } = formData;
+
+    const monthlyPayment = calculateMonthlyPayment(
+      propertyPrice,
+      deposit,
+      interestRate,
+      mortgageTerm
+    );
+
+    const capital = calculateCapital(propertyPrice, deposit);
+    const totalRepayment = calculateTotalRepayment(
+      monthlyPayment,
+      mortgageTerm
+    );
+    const interest = calculateTotalInterest(totalRepayment, capital);
+
+    // TODO: temp affordability check - will implement properly later
+    const affordabilityCheck = monthlyPayment * EXTRA_INTEREST_RATE; // placeholder calculation
+
+    setResults({
+      monthlyPayment,
+      totalRepayment,
+      capital,
+      interest,
+      affordabilityCheck,
+    });
   };
 
   return (
@@ -102,29 +144,50 @@ export default function MortgageCalculator() {
             </Button>
           </Form>
         </Col>
+
         <Col md="auto">
           <h2 className="pb-3">Results</h2>
           <Table striped="columns">
             <tbody>
               <tr className="border-b border-t">
                 <td>Monthly Payment</td>
-                <td className="text-right">{formatCurrency(763.68)}</td>
+                <td className="text-right">
+                  {results
+                    ? formatCurrency(results.monthlyPayment)
+                    : formatCurrency(0)}
+                </td>
               </tr>
               <tr className="border-b">
                 <td>Total Repayment</td>
-                <td className="text-right">{formatCurrency(137463.09)}</td>
+                <td className="text-right">
+                  {results
+                    ? formatCurrency(results.totalRepayment)
+                    : formatCurrency(0)}
+                </td>
               </tr>
               <tr className="border-b">
                 <td>Capital</td>
-                <td className="text-right">{formatCurrency(95000)}</td>
+                <td className="text-right">
+                  {results
+                    ? formatCurrency(results.capital)
+                    : formatCurrency(0)}
+                </td>
               </tr>
               <tr className="border-b">
                 <td>Interest</td>
-                <td className="text-right">{formatCurrency(42463.09)}</td>
+                <td className="text-right">
+                  {results
+                    ? formatCurrency(results.interest)
+                    : formatCurrency(0)}
+                </td>
               </tr>
               <tr className="border-b">
                 <td>Affordability check</td>
-                <td className="text-right">{formatCurrency(921.63)}</td>
+                <td className="text-right">
+                  {results
+                    ? formatCurrency(results.affordabilityCheck)
+                    : formatCurrency(0)}
+                </td>
               </tr>
             </tbody>
           </Table>

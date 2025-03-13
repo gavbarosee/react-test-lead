@@ -1,5 +1,8 @@
 // Calculations / formulae are based on the readme file
 
+import { EXTRA_INTEREST_RATE } from "../constants";
+import { calculateMonthlyPayment } from "./calculateRepayment";
+
 /**
  *
  * T = M * n
@@ -61,4 +64,29 @@ export function calculateTotalInterest(
   capital: number
 ): number {
   return totalRepayment - capital;
+}
+
+/**
+ * Calculates the affordability check by determining the monthly payment
+ * with a 3% increase in the interest rate.
+ *
+ * @param propertyPrice - The price of the property.
+ * @param deposit - The deposit amount.
+ * @param annualInterestRate - The annual interest rate.
+ * @param mortgageTermInYears - The mortgage term in years.
+ * @returns The monthly payment with the increased interest rate.
+ */
+export function calculateAffordabilityCheck(
+  propertyPrice: number,
+  deposit: number,
+  annualInterestRate: number,
+  mortgageTermInYears: number
+): number {
+  // calculate with 3% higher interest rate
+  return calculateMonthlyPayment(
+    propertyPrice,
+    deposit,
+    annualInterestRate + EXTRA_INTEREST_RATE,
+    mortgageTermInYears
+  );
 }
