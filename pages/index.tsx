@@ -7,14 +7,17 @@ import Col from "react-bootstrap/Col";
 import InputGroup from "react-bootstrap/InputGroup";
 import Table from "react-bootstrap/Table";
 
-import { formatCurrency } from "@/utils/formatCurrency";
-import { calculateMonthlyPayment } from "@/utils/MortgageCalculator/calculateRepayment";
+import { formatCurrency } from "@/utils/formatting/formatCurrency";
+
 import {
+  calculateAffordabilityCheck,
   calculateCapital,
-  calculateTotalRepayment,
   calculateTotalInterest,
-} from "@/utils/MortgageCalculator/mortgageUtils";
-import { EXTRA_INTEREST_RATE } from "@/utils/constants";
+  calculateTotalRepayment,
+  calculateYearlyBreakdown,
+  calculateMonthlyPayment,
+  YearlyBreakdownRecord,
+} from "@/utils/MortgageCalculator/mortgageCalculations";
 
 interface MortgageFormData {
   propertyPrice: number;
@@ -40,6 +43,10 @@ export default function MortgageCalculator() {
   });
 
   const [results, setResults] = useState<MortgageResults | null>(null);
+
+  const [yearlyBreakdown, setYearlyBreakdown] = useState<
+    YearlyBreakdownRecord[]
+  >([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -68,9 +75,19 @@ export default function MortgageCalculator() {
       mortgageTerm
     );
     const interest = calculateTotalInterest(totalRepayment, capital);
+    const affordabilityCheck = calculateAffordabilityCheck(
+      propertyPrice,
+      deposit,
+      interestRate,
+      mortgageTerm
+    );
 
-    // TODO: temp affordability check - will implement properly later
-    const affordabilityCheck = monthlyPayment * EXTRA_INTEREST_RATE; // placeholder calculation
+    const breakdown = calculateYearlyBreakdown(
+      propertyPrice,
+      deposit,
+      interestRate,
+      mortgageTerm
+    );
 
     setResults({
       monthlyPayment,
@@ -79,6 +96,8 @@ export default function MortgageCalculator() {
       interest,
       affordabilityCheck,
     });
+
+    setYearlyBreakdown(breakdown);
   };
 
   return (
@@ -203,10 +222,19 @@ export default function MortgageCalculator() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>1</td>
-                <td>{formatCurrency(10000)}</td>
-              </tr>
+              {yearlyBreakdown.length > 0 ? (
+                yearlyBreakdown.map((item) => (
+                  <tr key={item.year}>
+                    <td>{item.year}</td>
+                    <td>{formatCurrency(item.remainingDebt)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td>0</td>
+                  <td>{formatCurrency(0)}</td>
+                </tr>
+              )}
             </tbody>
           </Table>
         </Col>
