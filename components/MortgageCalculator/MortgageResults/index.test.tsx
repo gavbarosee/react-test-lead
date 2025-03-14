@@ -1,8 +1,8 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import MortgageResultsTable from "./MortgageResults";
-import { MortgageResults } from "../../types/mortgage";
-import { formatCurrency } from "../../utils/formatting/formatCurrency";
+import MortgageResultsTable from ".";
+import { MortgageResults } from "@/types/mortgage";
+import { formatCurrency } from "@/utils/formatting/formatCurrency";
 
 describe("MortgageResultsTable", () => {
   test("renders the table header correctly", () => {

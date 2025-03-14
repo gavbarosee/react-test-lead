@@ -1,6 +1,6 @@
-const BOE_BASE_URL =
+export const BOE_BASE_URL =
   process.env.BOE_API_URL || "https://www.bankofengland.co.uk/boeapps/iadb";
-const BOE_ENDPOINT = "fromshowcolumns.asp";
+export const BOE_ENDPOINT = "fromshowcolumns.asp";
 
 /**
  * Constructs the Bank of England API URL with appropriate parameters

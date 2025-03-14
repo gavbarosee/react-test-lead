@@ -2,8 +2,8 @@ import React from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 
-import { CurrencyInput, NumericInput, PercentageInput } from "./FormFields";
-import BankOfEnglandToggle from "./BankOfEnglandToggle";
+import { CurrencyInput, NumericInput, PercentageInput } from "../FormFields";
+import BankOfEnglandToggle from "../BankOfEnglandToggle";
 import { InterestRateData } from "@/services/bankOfEngland";
 import { MortgageFormData } from "@/types/mortgage";
 

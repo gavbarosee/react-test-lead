@@ -8,7 +8,7 @@ import MortgageResultsTable from "./MortgageResults";
 import YearlyBreakdownTable from "./YearlyBreakdownTable";
 import useMortgageCalculator from "@/hooks/useMortgageCalculator";
 
-const MortgageCalculator: React.FC = () => {
+const MortgageCalculator = () => {
   const {
     formData,
     validated,
