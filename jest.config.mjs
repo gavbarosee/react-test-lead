@@ -12,6 +12,8 @@ const config = {
     "^utils/(.*)$": "<rootDir>/utils/$1",
   },
   testEnvironment: "jsdom",
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  testMatch: ["**/*.test.ts", "**/*.test.tsx"],
 };
 
 export default createJestConfig(config);
